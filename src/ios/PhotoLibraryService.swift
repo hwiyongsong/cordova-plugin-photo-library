@@ -161,7 +161,7 @@ final class PhotoLibraryService {
                 
                 libraryItem["filePath"] = fullPath
             
-                if index == fetchResult.count - 1 { // Last item
+                if index == fetchResult.count - 1 || (options.maxChunks > 0 && chunkNum == options.maxChunks) { // Last item
                     completion(chunk, chunkNum, true)
                 } else if (options.itemsInChunk > 0 && chunk.count == options.itemsInChunk) ||
                     (options.chunkTimeSec > 0 && abs(chunkStartTime.timeIntervalSinceNow) >= options.chunkTimeSec) {
