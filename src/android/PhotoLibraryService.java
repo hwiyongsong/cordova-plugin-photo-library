@@ -66,7 +66,7 @@ public class PhotoLibraryService {
   public void getLibrary(Context context, PhotoLibraryGetLibraryOptions options, ChunkResultRunnable completion) throws JSONException {
 
     String whereClause = "";
-    queryLibrary(context, options.itemsInChunk, options.chunkTimeSec, options.includeAlbumData, whereClause, completion);
+    queryLibrary(context, options.itemsInChunk, options.maxItems, options.chunkTimeSec, options.includeAlbumData, whereClause, completion);
 
   }
 
@@ -262,7 +262,11 @@ public class PhotoLibraryService {
 
   private Pattern dataURLPattern = Pattern.compile("^data:(.+?)/(.+?);base64,");
 
-  private ArrayList<JSONObject> queryContentProvider(Context context, Uri collection, JSONObject columns, String whereClause) throws JSONException {
+  private ArrayList<JSONObject> queryContentProvider(Context context, Uri collection, JSONObject columns, String whereClause) {
+    return queryContentProvider(context, collection, columns, whereClause, 0);
+  }
+
+  private ArrayList<JSONObject> queryContentProvider(Context context, Uri collection, JSONObject columns, String whereClause, int limit) throws JSONException {
 
     final ArrayList<String> columnNames = new ArrayList<String>();
     final ArrayList<String> columnValues = new ArrayList<String>();
@@ -276,7 +280,10 @@ public class PhotoLibraryService {
       columnValues.add("" + columns.getString(column));
     }
 
-    final String sortOrder = MediaStore.Images.Media.DATE_TAKEN + " DESC";
+    String sortOrder = MediaStore.Images.Media.DATE_TAKEN + " DESC";
+    if (limit > 0) {
+      sortOrder += " LIMIT " + limit;
+    }
 
     final Cursor cursor = context.getContentResolver().query(
       collection,
@@ -322,10 +329,10 @@ public class PhotoLibraryService {
   }
 
   private void queryLibrary(Context context, String whereClause, ChunkResultRunnable completion) throws JSONException {
-    queryLibrary(context, 0, 0, false, whereClause, completion);
+    queryLibrary(context, 0, 0, 0, false, whereClause, completion);
   }
 
-  private void queryLibrary(Context context, int itemsInChunk, double chunkTimeSec, boolean includeAlbumData, String whereClause, ChunkResultRunnable completion)
+  private void queryLibrary(Context context, int itemsInChunk, int maxItems, double chunkTimeSec, boolean includeAlbumData, String whereClause, ChunkResultRunnable completion)
     throws JSONException {
 
     // All columns here: https://developer.android.com/reference/android/provider/MediaStore.Images.ImageColumns.html,
@@ -342,7 +349,7 @@ public class PhotoLibraryService {
       put("nativeURL", MediaStore.MediaColumns.DATA); // will not be returned to javascript
     }};
 
-    final ArrayList<JSONObject> queryResults = queryContentProvider(context, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, whereClause);
+    final ArrayList<JSONObject> queryResults = queryContentProvider(context, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, whereClause, maxItems);
 
     ArrayList<JSONObject> chunk = new ArrayList<JSONObject>();
 
