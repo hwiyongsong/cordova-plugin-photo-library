@@ -262,7 +262,7 @@ public class PhotoLibraryService {
 
   private Pattern dataURLPattern = Pattern.compile("^data:(.+?)/(.+?);base64,");
 
-  private ArrayList<JSONObject> queryContentProvider(Context context, Uri collection, JSONObject columns, String whereClause) {
+  private ArrayList<JSONObject> queryContentProvider(Context context, Uri collection, JSONObject columns, String whereClause) throws JSONException {
     return queryContentProvider(context, collection, columns, whereClause, 0);
   }
 
